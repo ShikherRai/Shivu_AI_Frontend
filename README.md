@@ -11,6 +11,3 @@ This repository contains the frontend of Shivu AI Assistant, a smart AI-powered 
 - HTML
 - CSS
 - JavaScript
-
-## How to Run
-1. Clone the repository:
