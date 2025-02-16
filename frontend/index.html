@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shivu - AI Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        .chat-container {
+            max-width: 600px;
+            margin: auto;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+        #chat-box {
+            height: 300px;
+            overflow-y: auto;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #333;
+            margin-bottom: 10px;
+            background: #252525;
+            border-radius: 5px;
+        }
+        .user-message {
+            color: cyan;
+        }
+        .bot-message {
+            color: lightgreen;
+        }
+        button {
+            padding: 10px 20px;
+            background: #0084ff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #005bb5;
+        }
+        .assistant-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            position: absolute;
+            top: -60px;
+            right: 10px;
+            border: 3px solid white;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Shivu - AI Assistant</h1>
+    <div class="chat-container">
+        <img src="shivu.png" alt="Shivu" class="assistant-image">
+        <div id="chat-box"></div>
+        <button onclick="startVoiceRecognition()">🎤 Speak</button>
+    </div>
+    <script>
+        function startVoiceRecognition() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const userInput = event.results[0][0].transcript;
+                displayMessage(userInput, 'user');
+                sendToBackend(userInput);
+            };
+        }
+
+        function displayMessage(message, sender) {
+            const chatBox = document.getElementById('chat-box');
+            const messageElement = document.createElement('p');
+            messageElement.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
+            messageElement.textContent = (sender === 'user' ? 'You: ' : 'Shivu: ') + message;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendToBackend(message) {
+            fetch('http://localhost:5000/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayMessage(data.response, 'bot');
+                speakText(data.response);
+            });
+        }
+
+        function speakText(text) {
+            const speech = new SpeechSynthesisUtterance();
+            speech.text = text;
+            speech.rate = 1;
+            speech.pitch = 1;
+            speech.voice = speechSynthesis.getVoices().find(voice => voice.name.includes("Google UK English Male"));
+            speechSynthesis.speak(speech);
+        }
+    </script>
+</body>
+</html>
